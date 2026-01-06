@@ -1,84 +1,169 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-const slogans = [
-  "Turn chats into apps",
-  "Prompt. Ship. Repeat.",
-  "Build anything from a chat",
-  "Ideas → Apps, instantly",
-  "From zero to MVP in minutes",
-  "Your cofounder in the command line",
-  "Draft, iterate, deploy",
-  "Ship faster than you can type",
-  "Design in text, deliver in code",
-  "Dream it. Prompt it. Run it.",
-  "Chat-native app building",
-  "From prompt to product",
-  "One prompt, infinite apps",
-  "Stop scaffolding. Start shipping.",
-  "Prototype at the speed of thought",
-  "Make conversations executable"
-];
+export default function Calculator() {
+  const [display, setDisplay] = useState('0');
+  const [previousValue, setPreviousValue] = useState<number | null>(null);
+  const [operation, setOperation] = useState<string | null>(null);
+  const [waitingForNewValue, setWaitingForNewValue] = useState(false);
 
-export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+  const handleNumberClick = (num: string) => {
+    if (waitingForNewValue) {
+      setDisplay(num);
+      setWaitingForNewValue(false);
+    } else {
+      setDisplay(display === '0' ? num : display + num);
+    }
+  };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % slogans.length);
-        setIsVisible(true);
-      }, 400);
-    }, 2800);
+  const handleOperationClick = (op: string) => {
+    const currentValue = parseFloat(display);
 
-    return () => clearInterval(interval);
-  }, []);
+    if (previousValue === null) {
+      setPreviousValue(currentValue);
+    } else if (operation) {
+      const result = performCalculation(previousValue, currentValue, operation);
+      setDisplay(String(result));
+      setPreviousValue(result);
+    }
+
+    setOperation(op);
+    setWaitingForNewValue(true);
+  };
+
+  const performCalculation = (prev: number, current: number, op: string): number => {
+    switch (op) {
+      case '+':
+        return prev + current;
+      case '-':
+        return prev - current;
+      case '×':
+        return prev * current;
+      case '÷':
+        return prev / current;
+      default:
+        return current;
+    }
+  };
+
+  const handleEquals = () => {
+    if (operation && previousValue !== null) {
+      const currentValue = parseFloat(display);
+      const result = performCalculation(previousValue, currentValue, operation);
+      setDisplay(String(result));
+      setPreviousValue(null);
+      setOperation(null);
+      setWaitingForNewValue(true);
+    }
+  };
+
+  const handleClear = () => {
+    setDisplay('0');
+    setPreviousValue(null);
+    setOperation(null);
+    setWaitingForNewValue(false);
+  };
+
+  const handleDecimal = () => {
+    if (waitingForNewValue) {
+      setDisplay('0.');
+      setWaitingForNewValue(false);
+    } else if (!display.includes('.')) {
+      setDisplay(display + '.');
+    }
+  };
+
+  const handleBackspace = () => {
+    if (display.length > 1) {
+      setDisplay(display.slice(0, -1));
+    } else {
+      setDisplay('0');
+    }
+  };
+
+  const Button = ({ children, onClick, className = '', variant = 'default' }: any) => {
+    const baseClass = 'h-16 rounded-xl font-semibold text-xl transition-all active:scale-95';
+    const variants = {
+      default: 'bg-gray-700 hover:bg-gray-600 text-white',
+      operation: 'bg-orange-500 hover:bg-orange-600 text-white',
+      clear: 'bg-gray-500 hover:bg-gray-400 text-white',
+      equals: 'bg-green-500 hover:bg-green-600 text-white'
+    };
+    
+    return (
+      <button
+        onClick={onClick}
+        className={`${baseClass} ${variants[variant]} ${className}`}
+      >
+        {children}
+      </button>
+    );
+  };
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
-      {/* Enhanced animated aurora background layers */}
-      <div className="absolute inset-0 bg-aurora-layer-1" />
-      <div className="absolute inset-0 bg-aurora-layer-2" />
-      <div className="absolute inset-0 bg-aurora-layer-3" />
-      
-      {/* Floating particles overlay */}
-      <div className="absolute inset-0 bg-particles" />
-      
-      {/* Main content - centered */}
-      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <h1 className="text-center text-[clamp(28px,6vw,64px)] font-medium tracking-tight mb-4">
-          Turn Chats into Apps
-        </h1>
-        
-        {/* Rotating slogans */}
-        <div className="mt-4 h-8 md:h-10 overflow-hidden flex items-center justify-center">
-          <span
-            className={`inline-block text-center text-[clamp(18px,3vw,32px)] font-light transition-all duration-[400ms] ease-in-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}
-          >
-            {slogans[currentIndex]}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-gray-800 rounded-3xl shadow-2xl p-6 border border-gray-700">
+        {/* Display */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-6 border border-gray-700">
+          <div className="text-right text-5xl font-bold text-white break-all">
+            {display}
+          </div>
+          {operation && (
+            <div className="text-right text-sm text-gray-400 mt-2">
+              {previousValue} {operation}
+            </div>
+          )}
         </div>
-      </main>
-      
-      {/* Start Prompting arrow pointing left - bottom left */}
-      <div className="absolute left-6 md:left-8 bottom-[5%] z-20 flex items-center gap-3 arrow-point-left">
-        <div className="flex items-center gap-2 text-white/80 font-medium text-sm md:text-base">
-          <svg 
-            className="w-5 h-5 md:w-6 md:h-6 animate-bounce-horizontal" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Start prompting</span>
+
+        {/* Buttons Grid */}
+        <div className="grid grid-cols-4 gap-3">
+          {/* Row 1 */}
+          <Button onClick={handleClear} variant="clear" className="col-span-2">
+            AC
+          </Button>
+          <Button onClick={handleBackspace} variant="clear">
+            ⌫
+          </Button>
+          <Button onClick={() => handleOperationClick('÷')} variant="operation">
+            ÷
+          </Button>
+
+          {/* Row 2 */}
+          <Button onClick={() => handleNumberClick('7')}>7</Button>
+          <Button onClick={() => handleNumberClick('8')}>8</Button>
+          <Button onClick={() => handleNumberClick('9')}>9</Button>
+          <Button onClick={() => handleOperationClick('×')} variant="operation">
+            ×
+          </Button>
+
+          {/* Row 3 */}
+          <Button onClick={() => handleNumberClick('4')}>4</Button>
+          <Button onClick={() => handleNumberClick('5')}>5</Button>
+          <Button onClick={() => handleNumberClick('6')}>6</Button>
+          <Button onClick={() => handleOperationClick('-')} variant="operation">
+            −
+          </Button>
+
+          {/* Row 4 */}
+          <Button onClick={() => handleNumberClick('1')}>1</Button>
+          <Button onClick={() => handleNumberClick('2')}>2</Button>
+          <Button onClick={() => handleNumberClick('3')}>3</Button>
+          <Button onClick={() => handleOperationClick('+')} variant="operation">
+            +
+          </Button>
+
+          {/* Row 5 */}
+          <Button onClick={() => handleNumberClick('0')} className="col-span-2">
+            0
+          </Button>
+          <Button onClick={handleDecimal}>.</Button>
+          <Button onClick={handleEquals} variant="equals">
+            =
+          </Button>
         </div>
       </div>
     </div>
   );
 }
+
